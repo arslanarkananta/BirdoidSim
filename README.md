@@ -1,5 +1,5 @@
 # BirdoidSim
-BirdoidSim is a simulation of bird and fish movement, using separation, alignment, cohesion (https://en.wikipedia.org/wiki/Boids). <br>
+BirdoidSim is a simulation of bird and fish movement, using separation, alignment, cohesion (https://en.wikipedia.org/wiki/Boids).
 This project is created using Raylib and Raygui in C.
 
 # Screen recording
