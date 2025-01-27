@@ -1,33 +1,32 @@
+#ifndef BOID_H
+#define BOID_H
+
 #include "raylib.h"
-#pragma once
 
-constexpr int screenWidth = 1200, screenHeight = 900, boidNum = 500;
-constexpr float mapSize = 200.0f;
-extern float visualRange, protectedRange, turnFactor;
-extern float centeringFactor, avoidFactor, matchingFactor;
-extern float maxspeed, minspeed;
+#define SCREEN_WIDTH 1200
+#define SCREEN_HEIGHT 900
+#define BOID_NUM 500
+#define MAP_SIZE 200.0f
+#define TRAIL_LENGTH 30
+#define TRAIL_UPDATE_RATE 3
 
-class Boid {
-public:
-    Boid() {
-        int mapSizeInt = static_cast<int>(mapSize);
-        int maxSpeedInt = static_cast<int>(maxspeed);
-    
-        pos = { 
-            static_cast<float>(GetRandomValue(-mapSizeInt, mapSizeInt)),
-            static_cast<float>(GetRandomValue(-mapSizeInt, mapSizeInt)),
-            static_cast<float>(GetRandomValue(-mapSizeInt, mapSizeInt))
-        };
-        vel = {
-            static_cast<float>(GetRandomValue(-maxSpeedInt, maxSpeedInt)),
-            static_cast<float>(GetRandomValue(-maxSpeedInt, maxSpeedInt)),
-            static_cast<float>(GetRandomValue(-maxSpeedInt, maxSpeedInt))
-        };
-    }
+extern float visualRange;
+extern float protectedRange;
+extern float turnFactor;
+extern float centeringFactor;
+extern float avoidFactor;
+extern float matchingFactor;
+extern float maxspeed;
+extern float minspeed;
 
-    void UpdatePosition(Boid* boids);
-    void DrawBoid(const Camera3D& camera);
+typedef struct {
+    Vector3 pos;
+    Vector3 vel;
+} Boid;
 
-private:
-    Vector3 pos, vel;
-};
+void initBoid(Boid* boid);
+void updateBoidPosition(Boid* boid, Boid* boids);
+void drawBoid(Boid* boid, const Camera3D* camera);
+Vector3 getBoidPosition(Boid* boid);
+
+#endif
