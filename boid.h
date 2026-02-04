@@ -9,13 +9,21 @@
 #define MAP_SIZE 200.0f
 #define TRAIL_LENGTH 30
 #define TRAIL_UPDATE_RATE 3
+#define TURN_FACTOR 0.2f
+
+#define DEF_MIN_SPEED 2.0f
+#define DEF_MAX_SPEED 3.0f
+#define DEF_VISUAL_RANGE 60.0f
+#define DEF_PROTECTED_RANGE 10.0f
+#define DEF_COHESION 0.0005f
+#define DEF_AVOID 0.15f
+#define DEF_ALIGN 0.6f
 
 extern float visualRange;
 extern float protectedRange;
-extern float turnFactor;
-extern float centeringFactor;
+extern float cohesionFactor;
 extern float avoidFactor;
-extern float matchingFactor;
+extern float alignFactor;
 extern float maxspeed;
 extern float minspeed;
 

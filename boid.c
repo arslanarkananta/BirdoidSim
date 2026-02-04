@@ -47,15 +47,15 @@ void updateBoidPosition(Boid* boid, Boid* boids) {
     }
 
     boid->vel = Vector3Add(boid->vel, Vector3Scale(closeVec, avoidFactor));
-    boid->vel = Vector3Add(boid->vel, Vector3Scale(alignVec, matchingFactor));
-    boid->vel = Vector3Add(boid->vel, Vector3Scale(cohesionVec, centeringFactor));
+    boid->vel = Vector3Add(boid->vel, Vector3Scale(alignVec, alignFactor));
+    boid->vel = Vector3Add(boid->vel, Vector3Scale(cohesionVec, cohesionFactor));
 
     if (boid->pos.x < -MAP_SIZE || boid->pos.x > MAP_SIZE) 
-        boid->vel.x += (boid->pos.x < -MAP_SIZE) ? turnFactor : -turnFactor;
+        boid->vel.x += (boid->pos.x < -MAP_SIZE) ? TURN_FACTOR : -TURN_FACTOR;
     if (boid->pos.y < -MAP_SIZE || boid->pos.y > MAP_SIZE) 
-        boid->vel.y += (boid->pos.y < -MAP_SIZE) ? turnFactor : -turnFactor;
+        boid->vel.y += (boid->pos.y < -MAP_SIZE) ? TURN_FACTOR : -TURN_FACTOR;
     if (boid->pos.z < -MAP_SIZE || boid->pos.z > MAP_SIZE) 
-        boid->vel.z += (boid->pos.z < -MAP_SIZE) ? turnFactor : -turnFactor;
+        boid->vel.z += (boid->pos.z < -MAP_SIZE) ? TURN_FACTOR : -TURN_FACTOR;
 
     float speed = Vector3Length(boid->vel);
     if (speed > maxspeed) boid->vel = Vector3Scale(boid->vel, maxspeed / speed);

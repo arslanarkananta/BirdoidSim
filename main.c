@@ -6,15 +6,17 @@
 #include "boid.h"
 #include <math.h>
 
-float visualRange = 60.0f;
-float protectedRange = 10.0f;
-float minspeed = 2.0f;
-float maxspeed = 3.0f;
-float turnFactor = 0.2f;
-float centeringFactor = 0.0005f;
-float avoidFactor = 0.15f;
-float matchingFactor = 0.6f;
+float visualRange = DEF_VISUAL_RANGE;
+float protectedRange = DEF_PROTECTED_RANGE;
+float minspeed = DEF_MIN_SPEED;
+float maxspeed = DEF_MAX_SPEED;
+float cohesionFactor = DEF_COHESION;
+float avoidFactor = DEF_AVOID;
+float alignFactor = DEF_ALIGN;
+
 Vector3 OldPos[TRAIL_LENGTH][500];
+bool showTrail = true;
+float speedfactor = 1.0f;
 
 void ShiftTrailPositions(int boidIndex, Vector3 newPos) {
     for (int i = TRAIL_LENGTH - 1; i > 0; i--) {
@@ -23,13 +25,41 @@ void ShiftTrailPositions(int boidIndex, Vector3 newPos) {
     OldPos[0][boidIndex] = newPos;
 }
 
+void updateTrailPositions(Boid* boids, Camera3D camera) {
+    static int frameCount = 0;
+    frameCount++;
+    for (int i = 0; i < BOID_NUM; ++i) {
+        if (frameCount % TRAIL_UPDATE_RATE == 0) {
+            ShiftTrailPositions(i, getBoidPosition(&boids[i]));
+        }
+    }
+}
+
+void drawTrail(void) {
+    if (!showTrail) return;
+    for (int i = 0; i < BOID_NUM; ++i) {
+        for (int j = 1; j < TRAIL_LENGTH; ++j) {
+            Color trailColor = (Color){ 0, 0, 255, (unsigned char)(100 * (1.0f - (j / (float)TRAIL_LENGTH))) };
+            DrawLine3D(OldPos[j-1][i], OldPos[j][i], trailColor);
+        }
+    }
+}
+
+void resetParameters(void) {
+    visualRange = DEF_VISUAL_RANGE;
+    protectedRange = DEF_PROTECTED_RANGE;
+    cohesionFactor = DEF_COHESION;
+    avoidFactor = DEF_AVOID;
+    alignFactor = DEF_ALIGN;
+    speedfactor = 1.0f;
+}
+
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "BirdoidSim");
     SetTargetFPS(60);
 
     Boid* boids = malloc(sizeof(Boid) * BOID_NUM);
-    int frameCount = 0;
     
     for (int i = 0; i < BOID_NUM; i++) {
         initBoid(&boids[i]);
@@ -49,7 +79,9 @@ int main(void) {
     float cameraRadius = 800.0f;
 
     while (!WindowShouldClose()) {
-        frameCount++;
+        if (IsKeyPressed(KEY_SPACE)) showTrail = !showTrail;
+        minspeed = DEF_MIN_SPEED * speedfactor;
+        maxspeed = DEF_MAX_SPEED * speedfactor;
         
         cameraAngle += 0.05f;
         if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) cameraRadius -= 2.0f;
@@ -62,32 +94,29 @@ int main(void) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 20, 200, 30 }, "Visual Range", TextFormat("%.2f", visualRange), &visualRange, 40.0f, 100.0f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 60, 200, 30 }, "Protected Range", TextFormat("%.2f", protectedRange), &protectedRange, 0.0f, 60.0f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 120, 200, 30 }, "Coherence", TextFormat("%.2f", centeringFactor * 1000), &centeringFactor, 0.0f, 0.001f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 160, 200, 30 }, "Separation", TextFormat("%.2f", avoidFactor), &avoidFactor, 0.0f, 1.0f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 200, 200, 30 }, "Alignment", TextFormat("%.2f", matchingFactor), &matchingFactor, 0.0f, 1.0f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 260, 200, 30 }, "Minspeed", TextFormat("%.2f", minspeed), &minspeed, 0.0f, 10.0f);
-        GuiSliderBar((Rectangle){ GetScreenWidth() - 240, 300, 200, 30 }, "Maxspeed", TextFormat("%.2f", maxspeed), &maxspeed, 0.0f, 10.0f);
-
         BeginMode3D(camera);
         DrawGrid(20, 50.0f);
-        
         for (int i = 0; i < BOID_NUM; ++i) {
             updateBoidPosition(&boids[i], boids);
             drawBoid(&boids[i], &camera);
-            
-            if (frameCount % TRAIL_UPDATE_RATE == 0) {
-                ShiftTrailPositions(i, getBoidPosition(&boids[i]));
-            }
-            
-            for (int j = 1; j < TRAIL_LENGTH; ++j) {
-                Color trailColor = (Color){ 0, 0, 255, (unsigned char)(100 * (1.0f - (j / (float)TRAIL_LENGTH))) };
-                DrawLine3D(OldPos[j-1][i], OldPos[j][i], trailColor);
-            }
         }
-        
+        updateTrailPositions(boids, camera);
+        drawTrail();
         EndMode3D();
+        
+        DrawRectangle(5, 5, 325, 80, Fade(LIGHTGRAY, 0.3f));
+        DrawText("Use WASD to move the camera", 20, 20, 10, DARKGRAY);
+        DrawText("Press Space to toggle the trails", 20, 40, 10, DARKGRAY);
+        DrawText("Control the parameters with the sliders below", 20, 60, 10, DARKGRAY);
+        
+        DrawRectangle(GetScreenWidth() - 320, 5, 315, 300, Fade(LIGHTGRAY, 0.3f));
+        if (GuiButton((Rectangle){ GetScreenWidth() - 300, 20, 280, 30 }, "Reset")) resetParameters();
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 60, 200, 30 }, "Visual", TextFormat("%.2f", visualRange), &visualRange, 40.0f, 100.0f);
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 100, 200, 30 }, "Protected", TextFormat("%.2f", protectedRange), &protectedRange, 0.0f, 60.0f);
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 140, 200, 30 }, "Coherence", TextFormat("%.2f", cohesionFactor * 1000), &cohesionFactor, 0.0f, 0.001f);
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 180, 200, 30 }, "Separation", TextFormat("%.2f", avoidFactor), &avoidFactor, 0.0f, 1.0f);
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 220, 200, 30 }, "Alignment", TextFormat("%.2f", alignFactor), &alignFactor, 0.0f, 1.0f);
+        GuiSliderBar((Rectangle){ GetScreenWidth() - 250, 260, 200, 30 }, "Speed", TextFormat("%.2f", speedfactor), &speedfactor, 0.0f, 2.0f);
         EndDrawing();
     }
 
